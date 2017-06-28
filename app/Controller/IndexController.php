@@ -1,6 +1,7 @@
 <?php
 namespace App\Controller;
 use App\Model\EnvConfig;
+use App\Component\Curl;
 
 class IndexController extends BaseController 
 {
@@ -78,6 +79,25 @@ class IndexController extends BaseController
             $params[$param_keys[$i]] = isset($param_values[$i]) ? $param_values[$i] : '';
         }
 
+        $config = EnvConfig::first();
+        if(is_null($config)) {
+            return $this->errorResponse();
+        }
+
+        $master_header = empty($config['master_host']) ? [] : ['Host: '. $config['master_host']];
+        $master_url = sprintf("%s://%s:%d%s", strtolower($config['master_protocol']), $config['master_ip'], $config['master_port'], $uri);
+        $master_ret = Curl::getInstance()->curl($master_url, $method, $params, $master_header);
+
+        $test_header = empty($config['test_host']) ? [] : ['Host: '. $config['test_host']];
+        $test_url = sprintf("%s://%s:%d%s", strtolower($config['test_protocol']), $config['test_ip'], $config['test_port'], $uri);
+        $test_ret = Curl::getInstance()->curl($test_url, $method, $params, $master_header);
+
+        $data = [
+            'test_ret'   => $test_ret,
+            'master_ret' => $master_ret,
+        ];
+
+        return $this->successResponse($data);
     }
 
 }

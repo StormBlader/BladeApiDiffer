@@ -247,13 +247,9 @@
                 paramValues : paramValues,
             },
             function(data){
-                console.log(data);
-                return false;
-                if(data == 'noConfig') {
-                    alert('没有配置文件，请打开配置进行保存');
-                }
-                
-                if(data.success){
+                if(data.errno != 0) {
+                    alert('请求错误，请检查配置');
+                }else {
                     console.log(data);
                 }
             });
