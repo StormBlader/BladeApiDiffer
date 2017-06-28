@@ -74,10 +74,14 @@ class IndexController extends BaseController
         $param_keys   = $this->getRequest('paramKeys');
         $param_values = $this->getRequest('paramValues');
 
+        $_SESSION['uri']          = $uri;
+        $_SESSION['method']       = $method;
+
         $params = [];
         for($i = 0; $i < count($param_keys); $i++) {
             $params[$param_keys[$i]] = isset($param_values[$i]) ? $param_values[$i] : '';
         }
+        $_SESSION['params']   = json_encode($params);
 
         $config = EnvConfig::first();
         if(is_null($config)) {

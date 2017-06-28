@@ -171,10 +171,7 @@
             </thead>
             <tbody id="param-body">
             <tr class="params_p" cnt="1">
-                <td><input class="params_name input-text " type="text" name="request_param_key[]" title="参数名称" alt="参数名称" value=""></td>
-                <td><input class="params_value input-text" type="text" name="request_param_value[]" title="参数数值" alt="参数数值" value="" maxlength="2000000000">
-                    <button type="button" class="btn btn-default btn-sm rm-param">删除参数</button>
-                </td>
+                
             </tr>
             <tr id="params_end">
                 <td colspan="2">
@@ -187,159 +184,180 @@
 </body>
 
 <script>
+var uri          = "<?=isset($_SESSION['uri']) ? $_SESSION['uri'] : ''?>";
+var method       = "<?=isset($_SESSION['method']) ? $_SESSION['method'] : 'GET'?>";
+var params   = <?=isset($_SESSION['params']) ? $_SESSION['params'] : ''?>;
 
-    $('#saveConfig').click(function(){
-    	var master_protocol = $('#master_protocol').val();
-    	var master_host     = $('#master_host').val();
-    	var master_ip       = $('#master_ip').val();
-        
-    	var test_protocol   = $('#test_protocol').val();
-    	var test_host       = $('#test_host').val();
-    	var test_ip         = $('#test_ip').val();
+$("#requestUri").val(uri);
+$('#requestMethod').val(method);
 
-        if($.trim(master_ip) == '' || $.trim(test_ip) == '') {
-            alert('请填写完整信息');
-            return false;
-        }
+var params_keys = Object.keys(params);
+var params_count = params_keys.length;
 
-        $.post(
-            '/index/saveConfig', 
-            {
-                master_protocol : master_protocol,
-                master_host : master_host,
-                master_ip : master_ip,
-                
-                test_protocol : test_protocol,
-                test_host : test_host,
-                test_ip : test_ip
-               
-            }, 
-            function(data){
-                if(data.errno != 0) {
-                    alert('保存失败');
-                }else {
-                    alert('保存成功');
-                    $("#showConfig").click();
-                }
-            });
-    });
+$.each(params, function(index, item){
+    $("tr.params_p").last().after('' +
+                '<tr class="params_p" cnt="' + params_count + '">' +
+                '<td><input class="params_name input-text " type="text" name="request_param_key[]" title="参数名称" alt="参数名称" value="' + index + '"' +
+                ' ></td>' +
+                ' <td><input class="params_value input-text" type="text" name="request_param_value[]" title="参数数值" alt="参数数值" value="' + item +'"' + ' maxlength="2000000000" />' +
+                '<button type="button" class="btn btn-default btn-sm rm-param">删除参数</button>' +
+                '</td>' +
+                ' </tr>' +
+                '');
+});
 
-    $("#requestBtn").click(function(){
-        var requestMethod = $("#requestMethod").val();
-        var requestUri = $("#requestUri").val();
-        var paramKeys = new Array();
-        var paramValues = new Array();
+$('#saveConfig').click(function(){
+	var master_protocol = $('#master_protocol').val();
+	var master_host     = $('#master_host').val();
+	var master_ip       = $('#master_ip').val();
+    
+	var test_protocol   = $('#test_protocol').val();
+	var test_host       = $('#test_host').val();
+	var test_ip         = $('#test_ip').val();
 
-        $("input[name='request_param_key[]']").each(function(index,item){
-            paramKeys.push($(this).val());
-        });
+    if($.trim(master_ip) == '' || $.trim(test_ip) == '') {
+        alert('请填写完整信息');
+        return false;
+    }
 
-        $("input[name='request_param_value[]']").each(function(index,item){
-            paramValues.push($(this).val());
-        });
-
-        $.post(
-            '/index/requestUri',
-            {
-                requestMethod : requestMethod,
-                requestUri : requestUri,
-                paramKeys : paramKeys,
-                paramValues : paramValues,
-            },
-            function(data){
-                if(data.errno != 0) {
-                    alert('请求错误，请检查配置');
-                }else {
-                    console.log(data);
-                }
-            });
-    });
-
-
-    $(function () {
-        //添加参数
-        $("#addParam").click(function () {
-            var length = $("tr.params_p").length;
-            var max = $("tr.params_p").eq(0).attr('cnt');
-            for (var i = 0; i < length; i++) {
-                var current_cnt = parseInt($("tr.params_p").eq(i).attr('cnt'));
-                if (current_cnt > max) {
-                    max = current_cnt;
-                }
+    $.post(
+        '/index/saveConfig', 
+        {
+            master_protocol : master_protocol,
+            master_host : master_host,
+            master_ip : master_ip,
+            
+            test_protocol : test_protocol,
+            test_host : test_host,
+            test_ip : test_ip
+           
+        }, 
+        function(data){
+            if(data.errno != 0) {
+                alert('保存失败');
+            }else {
+                alert('保存成功');
+                $("#showConfig").click();
             }
-            max = max + 1;
-
-            $("tr.params_p").last().after('' +
-                    '<tr class="params_p" cnt="' + max + '">' +
-                    '<td><input class="params_name input-text " type="text" name="request_param_key[]" title="参数名称" alt="参数名称" value=""' +
-                    ' ></td>' +
-                    ' <td><input class="params_value input-text" type="text" name="request_param_value[]" title="参数数值" alt="参数数值" value=""' + ' maxlength="2000000000" />' +
-                    '<button type="button" class="btn btn-default btn-sm rm-param">删除参数</button>' +
-                    '</td>' +
-                    ' </tr>' +
-                    '');
-            //删除参数
-            $(".rm-param").on('click', function () {
-                $(this).parent().parent().remove();
-            });
         });
+});
+
+$("#requestBtn").click(function(){
+    var requestMethod = $("#requestMethod").val();
+    var requestUri = $("#requestUri").val();
+    var paramKeys = new Array();
+    var paramValues = new Array();
+
+    $("input[name='request_param_key[]']").each(function(index,item){
+        paramKeys.push($(this).val());
+    });
+
+    $("input[name='request_param_value[]']").each(function(index,item){
+        paramValues.push($(this).val());
+    });
+
+    $.post(
+        '/index/requestUri',
+        {
+            requestMethod : requestMethod,
+            requestUri : requestUri,
+            paramKeys : paramKeys,
+            paramValues : paramValues,
+        },
+        function(data){
+            if(data.errno != 0) {
+                alert('请求错误，请检查配置');
+            }else {
+                console.log(data);
+            }
+        });
+});
+
+
+$(function () {
+    //添加参数
+    $("#addParam").click(function () {
+        var length = $("tr.params_p").length;
+        var max = $("tr.params_p").eq(0).attr('cnt');
+        for (var i = 0; i < length; i++) {
+            var current_cnt = parseInt($("tr.params_p").eq(i).attr('cnt'));
+            if (current_cnt > max) {
+                max = current_cnt;
+            }
+        }
+        max = max + 1;
+
+        $("tr.params_p").last().after('' +
+                '<tr class="params_p" cnt="' + max + '">' +
+                '<td><input class="params_name input-text " type="text" name="request_param_key[]" title="参数名称" alt="参数名称" value=""' +
+                ' ></td>' +
+                ' <td><input class="params_value input-text" type="text" name="request_param_value[]" title="参数数值" alt="参数数值" value=""' + ' maxlength="2000000000" />' +
+                '<button type="button" class="btn btn-default btn-sm rm-param">删除参数</button>' +
+                '</td>' +
+                ' </tr>' +
+                '');
         //删除参数
         $(".rm-param").on('click', function () {
-
             $(this).parent().parent().remove();
         });
-        //发送请求
-        $(".btn-success").click(function () {
-            $(".highlight pre code").html("提交中...");
-            var length = $("tr.params_p").length;
-            var data = {};
-            var key = null;
-            var val = null;
-            for (var i = 0; i < length; i++) {
-                key = $("tr.params_p").eq(i).find("input.params_name").val();
-                val = $("tr.params_p").eq(i).find("input.params_value").val();
-                if (key != '') {
-                    eval("data." + key + "='" + val + "'");
-                }
+    });
+    //删除参数
+    $(".rm-param").on('click', function () {
+
+        $(this).parent().parent().remove();
+    });
+    //发送请求
+    $(".btn-success").click(function () {
+        $(".highlight pre code").html("提交中...");
+        var length = $("tr.params_p").length;
+        var data = {};
+        var key = null;
+        var val = null;
+        for (var i = 0; i < length; i++) {
+            key = $("tr.params_p").eq(i).find("input.params_name").val();
+            val = $("tr.params_p").eq(i).find("input.params_value").val();
+            if (key != '') {
+                eval("data." + key + "='" + val + "'");
             }
+        }
 
 
-            console.log(data);
+        console.log(data);
 
 
-            $.ajax({
-                url: $("input[name='url']").val(),
-                type: 'post',
-                data: data,
-                dataType: 'json',
-                success: function (result) {
-                    console.log(result);
-                    $(".highlight pre code").html(JSON.stringify(result));
-                },
-                error: function (result, XMLHttpRequest, textStatus, errorThrown) {
-                    $(".highlight pre code").html("发生错误，请查看控制台");
-                    console.log('错误信息如下:\n');
-                    console.log(result);
-                    console.log(XMLHttpRequest);
-                    console.log("错误: " + XMLHttpRequest + ";" + textStatus + ";" + errorThrown);
-                }
-            });
-
-            $.post('http://192.168.0.252/poster/action.php',{action:'addLink',link:$("input[name='url']").val()},function(result){
+        $.ajax({
+            url: $("input[name='url']").val(),
+            type: 'post',
+            data: data,
+            dataType: 'json',
+            success: function (result) {
                 console.log(result);
-            });
+                $(".highlight pre code").html(JSON.stringify(result));
+            },
+            error: function (result, XMLHttpRequest, textStatus, errorThrown) {
+                $(".highlight pre code").html("发生错误，请查看控制台");
+                console.log('错误信息如下:\n');
+                console.log(result);
+                console.log(XMLHttpRequest);
+                console.log("错误: " + XMLHttpRequest + ";" + textStatus + ";" + errorThrown);
+            }
         });
 
-        $(document).keydown(function(e){
-            if(e.keyCode == 27){
-                $('.link-list a').click();
-            }
-            if(e.keyCode == 13){
-                $(".btn-success").click();
-            }
+        $.post('http://192.168.0.252/poster/action.php',{action:'addLink',link:$("input[name='url']").val()},function(result){
+            console.log(result);
         });
+    });
 
-    })
+    $(document).keydown(function(e){
+        if(e.keyCode == 27){
+            $('.link-list a').click();
+        }
+        if(e.keyCode == 13){
+            $(".btn-success").click();
+        }
+    });
+
+})
 
 </script>
 </html>
