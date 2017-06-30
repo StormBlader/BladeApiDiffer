@@ -4,8 +4,11 @@
     <meta charset="utf-8">
     <title>ApiDiffer</title>
     <link rel="stylesheet" href="/static/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/static/bootstrap/css/jquery.json-viewer.css">
+    
     <script src="/static/js/jquery.min.js"></script>
     <script src="/static/bootstrap/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="/static/js/jquery.json-viewer.js"></script>
     <style>
         .wrap {
             margin-top: 10px;
@@ -180,13 +183,22 @@
             </tr>
             </tbody>
         </table>
+        <br>
+        <pre id="master-json" class="col-xs-6"></pre>
+        <pre id="test-json" class="col-xs-6"></pre>
+        
 	</div>
+    
 </body>
 
-<script>
+<script> 
 var uri          = "<?=isset($_SESSION['uri']) ? $_SESSION['uri'] : ''?>";
 var method       = "<?=isset($_SESSION['method']) ? $_SESSION['method'] : 'GET'?>";
-var params   = <?=isset($_SESSION['params']) ? $_SESSION['params'] : ''?>;
+var params       = new Array();
+<?php if(isset($_SESSION['params'])) { ?>
+    params       = <?= isset($_SESSION['params'])? $_SESSION['params'] : ''?>;
+<?php } ?>
+
 
 $("#requestUri").val(uri);
 $('#requestMethod').val(method);
@@ -205,6 +217,7 @@ $.each(params, function(index, item){
                 ' </tr>' +
                 '');
 });
+
 
 $('#saveConfig').click(function(){
 	var master_protocol = $('#master_protocol').val();
@@ -256,6 +269,8 @@ $("#requestBtn").click(function(){
         paramValues.push($(this).val());
     });
 
+    $("#master-json").empty();
+    $("#test-json").empty();
     $.post(
         '/index/requestUri',
         {
@@ -268,7 +283,11 @@ $("#requestBtn").click(function(){
             if(data.errno != 0) {
                 alert('请求错误，请检查配置');
             }else {
-                console.log(data);
+                
+                var master_ret = data.data.master_ret;
+                var test_ret = data.data.test_ret;
+                $("#master-json").jsonViewer(master_ret);
+                $("#test-json").jsonViewer(test_ret);
             }
         });
 });
@@ -306,57 +325,6 @@ $(function () {
 
         $(this).parent().parent().remove();
     });
-    //发送请求
-    $(".btn-success").click(function () {
-        $(".highlight pre code").html("提交中...");
-        var length = $("tr.params_p").length;
-        var data = {};
-        var key = null;
-        var val = null;
-        for (var i = 0; i < length; i++) {
-            key = $("tr.params_p").eq(i).find("input.params_name").val();
-            val = $("tr.params_p").eq(i).find("input.params_value").val();
-            if (key != '') {
-                eval("data." + key + "='" + val + "'");
-            }
-        }
-
-
-        console.log(data);
-
-
-        $.ajax({
-            url: $("input[name='url']").val(),
-            type: 'post',
-            data: data,
-            dataType: 'json',
-            success: function (result) {
-                console.log(result);
-                $(".highlight pre code").html(JSON.stringify(result));
-            },
-            error: function (result, XMLHttpRequest, textStatus, errorThrown) {
-                $(".highlight pre code").html("发生错误，请查看控制台");
-                console.log('错误信息如下:\n');
-                console.log(result);
-                console.log(XMLHttpRequest);
-                console.log("错误: " + XMLHttpRequest + ";" + textStatus + ";" + errorThrown);
-            }
-        });
-
-        $.post('http://192.168.0.252/poster/action.php',{action:'addLink',link:$("input[name='url']").val()},function(result){
-            console.log(result);
-        });
-    });
-
-    $(document).keydown(function(e){
-        if(e.keyCode == 27){
-            $('.link-list a').click();
-        }
-        if(e.keyCode == 13){
-            $(".btn-success").click();
-        }
-    });
-
 })
 
 </script>

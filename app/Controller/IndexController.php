@@ -81,7 +81,9 @@ class IndexController extends BaseController
         for($i = 0; $i < count($param_keys); $i++) {
             $params[$param_keys[$i]] = isset($param_values[$i]) ? $param_values[$i] : '';
         }
-        $_SESSION['params']   = json_encode($params);
+        if(!empty($params)) {
+            $_SESSION['params']   = json_encode($params);
+        }
 
         $config = EnvConfig::first();
         if(is_null($config)) {
