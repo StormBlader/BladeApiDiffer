@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <title>ApiDiffer</title>
     <link rel="stylesheet" href="/static/bootstrap/css/bootstrap.min.css">
-    <link rel="stylesheet" href="/static/bootstrap/css/jquery.json-viewer.css">
+    <link rel="stylesheet" href="/static/css/jquery.json-viewer.css">
     
     <script src="/static/js/jquery.min.js"></script>
     <script src="/static/bootstrap/js/bootstrap.min.js"></script>
@@ -184,6 +184,8 @@
             </tbody>
         </table>
         <br>
+        <div class="col-xs-6"><b>master返回结果</b></div>
+        <div class="col-xs-6"><b>test返回结果</b></div>
         <pre id="master-json" class="col-xs-6"></pre>
         <pre id="test-json" class="col-xs-6"></pre>
         
@@ -288,6 +290,7 @@ $("#requestBtn").click(function(){
                 var test_ret = data.data.test_ret;
                 $("#master-json").jsonViewer(master_ret);
                 $("#test-json").jsonViewer(test_ret);
+                highLightDiff("master-json", "test-json");
             }
         });
 });
@@ -327,5 +330,60 @@ $(function () {
     });
 })
 
+function highLightDiff(master_div_id, test_div_id)
+{
+    var master_li_count = $("#" + master_div_id + " li").length;
+    var test_li_count = $("#" + test_div_id + " li").length;
+    var loop_count = (master_li_count > test_li_count) ? master_li_count : test_li_count;
+
+    for(var i = 1; i <= loop_count; i ++) {
+        var $master_li = $("#" + master_div_id + " .row_" + i);
+        var $test_li = $("#" + test_div_id + " .row_" + i);
+        if(!isLiExist($master_li)) {
+            makeLiHighLight($master_li);
+        }
+        if(!isLiExist($test_li)) {
+            makeLiHighLight($test_li);
+        }
+
+        if(isLiToggle($master_li) && isLiToggle($test_li)) {
+            var master_key = $master_li.find(".json-toggle").first().html();
+            var test_key = $test_li.find(".json-toggle").first().html();
+
+            if(master_key != test_key) {
+                makeLiHighLight($master_li);
+                makeLiHighLight($test_li);
+            }
+        }else if(!isLiToggle($master_li) && !isLiToggle($test_li)) {
+            if($master_li.html() != $test_li.html()) {
+                makeLiHighLight($master_li);
+                makeLiHighLight($test_li);
+            }
+        }else {
+            makeLiHighLight($master_li);
+            makeLiHighLight($test_li);
+        }
+    }
+}
+
+function isLiExist($li)
+{
+    if($li.length == 0) {
+        return false;
+    }
+
+    return true;
+}
+
+function isLiToggle($li)
+{
+    var length = $li.find(".json-toggle").length;
+    return length > 0 ? true : false;
+}
+
+function makeLiHighLight($li)
+{
+    $li.css('background-color', 'red');
+}
 </script>
 </html>

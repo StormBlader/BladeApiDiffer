@@ -21,6 +21,7 @@
      return regexp.test(string);
   }
 
+  
   /**
    * Transform a json object into html representation
    * @return string
@@ -30,10 +31,7 @@
     if (typeof json === 'string') {
       /* Escape tags */
       json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-      if (isUrl(json))
-        html += '<a href="' + json + '" class="json-string">' + json + '</a>';
-      else
-        html += '<span class="json-string">"' + json + '"</span>';
+      html += '<span class="json-string">"' + json + '"</span>';
     }
     else if (typeof json === 'number') {
       html += '<span class="json-literal">' + json + '</span>';
@@ -48,7 +46,9 @@
       if (json.length > 0) {
         html += '[<ol class="json-array">';
         for (var i = 0; i < json.length; ++i) {
-          html += '<li>';
+          html += '<li class="row_'+row_index+'">';
+          row_index ++;
+
           /* Add toggle button if item is collapsable */
           if (isCollapsable(json[i])) {
             html += '<a href class="json-toggle"></a>';
@@ -72,7 +72,8 @@
         html += '{<ul class="json-dict">';
         for (var key in json) {
           if (json.hasOwnProperty(key)) {
-            html += '<li>';
+            html += '<li class="row_' + row_index +'">';
+            row_index ++;
             var keyRepr = options.withQuotes ?
               '<span class="json-string">"' + key + '"</span>' : key;
             /* Add toggle button if item is collapsable */
@@ -87,6 +88,7 @@
             if (--key_count > 0)
               html += ',';
             html += '</li>';
+
           }
         }
         html += '</ul>}';
@@ -105,12 +107,13 @@
    */
   $.fn.jsonViewer = function(json, options) {
     options = options || {};
-
+    row_index = 1;
     /* jQuery chaining */
     return this.each(function() {
 
       /* Transform to HTML */
       var html = json2html(json, options);
+
       if (isCollapsable(json))
         html = '<a href class="json-toggle"></a>' + html;
 

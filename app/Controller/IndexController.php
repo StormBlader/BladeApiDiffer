@@ -96,7 +96,7 @@ class IndexController extends BaseController
 
         $test_header = empty($config['test_host']) ? [] : ['Host: '. $config['test_host']];
         $test_url = sprintf("%s://%s:%d%s", strtolower($config['test_protocol']), $config['test_ip'], $config['test_port'], $uri);
-        $test_ret = Curl::getInstance()->curl($test_url, $method, $params, $master_header);
+        $test_ret = Curl::getInstance()->curl($test_url, $method, $params, $test_header);
 
         $data = [
             'test_ret'   => $test_ret,
