@@ -183,9 +183,11 @@
             </tr>
             </tbody>
         </table>
+
+
         <br>
-        <div class="col-xs-6"><b>master返回结果</b></div>
-        <div class="col-xs-6"><b>test返回结果</b></div>
+        <div class="col-xs-6"><b>master返回结果</b>&nbsp;<span id="master_consume" style="color:red"></span></div>
+        <div class="col-xs-6"><b>test返回结果</b>&nbsp;<span id="test_consume" style="color:red"></span></div>
         <pre id="master-json" class="col-xs-6"></pre>
         <pre id="test-json" class="col-xs-6"></pre>
         
@@ -285,11 +287,12 @@ $("#requestBtn").click(function(){
             if(data.errno != 0) {
                 alert('请求错误，请检查配置');
             }else {
-                
                 var master_ret = data.data.master_ret;
                 var test_ret = data.data.test_ret;
+                $("#master_consume").html("耗时:" + data.data.master_consume + " ms");
                 $("#master-json").jsonViewer(master_ret);
                 $("#test-json").jsonViewer(test_ret);
+                $("#test_consume").html("耗时:" + data.data.test_consume + " ms");
                 highLightDiff("master-json", "test-json");
             }
         });

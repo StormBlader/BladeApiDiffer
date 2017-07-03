@@ -92,19 +92,31 @@ class IndexController extends BaseController
 
         $master_header = empty($config['master_host']) ? [] : ['Host: '. $config['master_host']];
         $master_url = sprintf("%s://%s:%d%s", strtolower($config['master_protocol']), $config['master_ip'], $config['master_port'], $uri);
+        $master_before_time = $this->_getNowMillisecond();
         $master_ret = Curl::getInstance()->curl($master_url, $method, $params, $master_header);
+        $master_after_time = $this->_getNowMillisecond();
 
         $test_header = empty($config['test_host']) ? [] : ['Host: '. $config['test_host']];
         $test_url = sprintf("%s://%s:%d%s", strtolower($config['test_protocol']), $config['test_ip'], $config['test_port'], $uri);
+        $test_before_time = $this->_getNowMillisecond();
         $test_ret = Curl::getInstance()->curl($test_url, $method, $params, $test_header);
+        $test_after_time = $this->_getNowMillisecond();
+
 
         $data = [
             'test_ret'   => $test_ret,
+            'test_consume' => $test_after_time - $test_before_time,
             'master_ret' => $master_ret,
+            'master_consume' => $master_after_time - $master_before_time,
         ];
 
         return $this->successResponse($data);
     }
 
+    private function _getNowMillisecond()
+    {
+        list($t1, $t2) = explode(' ', microtime());
+        return (float)sprintf('%.0f',(floatval($t1)+floatval($t2))*1000);
+    }
 }
 ?>
