@@ -16,6 +16,6 @@ BladeApiDiffer 曾几何时，你优化接口却要依靠自己一点点去对�
 搭建步骤
 1. git clone
 2. composer install
-3. mysql导入blade.sql
+3. mysql导入apidiffer.sql
 4. 配置nginx的rewrite try_files $uri $uri/ @rewrite; location @rewrite { rewrite ^(.*)$ /index.php?_url=$1;  }
 3. 开跑
