@@ -160,6 +160,9 @@
                    style="height:60px;"
             />
             <span class="input-group-addon" id="basic-addon1">
+                <input type="number" id="requestCount" placeholder="请求次数" style="display:inline;width:100px;height:40px;"/>
+            </span>
+            <span class="input-group-addon" id="basic-addon1">
                 <button class="btn btn-default" id="requestBtn">请求</button>
             </span>
         </div>
@@ -262,6 +265,8 @@ $('#saveConfig').click(function(){
 $("#requestBtn").click(function(){
     var requestMethod = $("#requestMethod").val();
     var requestUri = $("#requestUri").val();
+    var requestCount = $("#requestCount").val();
+    requestCount = (requestCount == 0)? 1 : requestCount;
     var paramKeys = new Array();
     var paramValues = new Array();
 
@@ -280,6 +285,7 @@ $("#requestBtn").click(function(){
         {
             requestMethod : requestMethod,
             requestUri : requestUri,
+            requestCount : requestCount,
             paramKeys : paramKeys,
             paramValues : paramValues,
         },

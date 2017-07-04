@@ -112,20 +112,16 @@ class IndexController extends BaseController
 
         $async = new Async();
 
-        $master_count = $this->getRequest('master_count', 1);
+        $request_count = $this->getRequest('requestCount', 1);
         $master_header = empty($config['master_host']) ? [] : ['Host: '. $config['master_host']];
         $master_url = sprintf("%s://%s:%d%s", strtolower($config['master_protocol']), $config['master_ip'], $config['master_port'], $uri);
-        $test_count = $this->getRequest('test_count', 1);
         $test_header = empty($config['test_host']) ? [] : ['Host: '. $config['test_host']];
         $test_url = sprintf("%s://%s:%d%s", strtolower($config['test_protocol']), $config['test_ip'], $config['test_port'], $uri);
 
-        for($i = 0 ;$i < $master_count; $i ++) {
+        for($i = 0 ;$i < $request_count; $i ++) {
             $master_task = new Task($method, $master_url, $params, $master_header);
-            $async->attach($master_task, "master$i");
-        }
-
-        for($i = 0; $i < $test_count; $i ++) {
             $test_task   = new Task($method, $test_url, $params, $test_header);
+            $async->attach($master_task, "master$i");
             $async->attach($test_task, "test$i");
         }
 
@@ -133,23 +129,22 @@ class IndexController extends BaseController
 
         $master_total_consume = 0;
         $master_response = [];
-        for($i = 0; $i < $master_count; $i ++) {
+        $test_total_consume = 0;
+        $test_response = [];
+
+        for($i = 0; $i < $request_count; $i ++) {
             $master_total_consume += $async_ret["master$i"]['info']['total_time'];
             if(empty($async_ret["master$i"]['error'])) {
                 $master_response = $async_ret["master$i"]['content'];
             }
-        }
-        $master_avg_consume = $master_total_consume/$master_count;
 
-        $test_total_consume = 0;
-        $test_response = [];
-        for($i = 0; $i < $test_count; $i ++) {
             $test_total_consume += $async_ret["test$i"]['info']['total_time'];
             if(empty($async_ret["test$i"]['error'])) {
                 $test_response = $async_ret["test$i"]['content'];
             }
         }
-        $test_avg_consume = $test_total_consume/$test_count;
+        $master_avg_consume = $master_total_consume/$request_count;
+        $test_avg_consume = $test_total_consume/$request_count;
 
         $data = [
             'test_ret'             => json_decode($test_response, true),
