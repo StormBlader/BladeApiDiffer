@@ -280,6 +280,8 @@ $("#requestBtn").click(function(){
 
     $("#master-json").empty();
     $("#test-json").empty();
+    $("#master_consume").html('');
+    $("#test_consume").html('');
     $.post(
         '/index/requestUri',
         {
