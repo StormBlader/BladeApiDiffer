@@ -2,6 +2,8 @@
 namespace App\Controller;
 use App\Model\EnvConfig;
 use App\Component\Curl;
+use App\Lib\AsyncCurl\Task;
+use App\Lib\AsyncCurl\Async;
 
 class IndexController extends BaseController 
 {
@@ -90,6 +92,7 @@ class IndexController extends BaseController
             return $this->errorResponse();
         }
 
+        /**
         $master_header = empty($config['master_host']) ? [] : ['Host: '. $config['master_host']];
         $master_url = sprintf("%s://%s:%d%s", strtolower($config['master_protocol']), $config['master_ip'], $config['master_port'], $uri);
         $master_before_time = $this->_getNowMillisecond();
@@ -104,19 +107,60 @@ class IndexController extends BaseController
 
 
         $data = [
-            'test_ret'   => $test_ret,
-            'test_consume' => $test_after_time - $test_before_time,
-            'master_ret' => $master_ret,
-            'master_consume' => $master_after_time - $master_before_time,
+        ];
+        **/
+
+        $master_count = $this->getRequest('master_count', 1);
+        $master_async = new Async();
+        $master_header = empty($config['master_host']) ? [] : ['Host: '. $config['master_host']];
+        $master_url = sprintf("%s://%s:%d%s", strtolower($config['master_protocol']), $config['master_ip'], $config['master_port'], $uri);
+
+        for($i = 0 ;$i < $master_count; $i ++) {
+            $master_task = new Task($method, $master_url, $params, $master_header);
+            $master_async->attach($master_task, "master$i");
+        }
+        $master_ret = $master_async->execute(true);
+
+        $master_total_consume = 0;
+        $master_response = [];
+        for($i = 0; $i < $master_count; $i ++) {
+            $master_total_consume += $master_ret["master$i"]['info']['total_time'];
+            if(empty($master_ret["master$i"]['error'])) {
+                $master_response = $master_ret["master$i"]['content'];
+            }
+        }
+        $master_avg_consume = $master_total_consume/$master_count;
+
+        $test_count = $this->getRequest('test_count', 1);
+        $test_async = new Async();
+        $test_header = empty($config['test_host']) ? [] : ['Host: '. $config['test_host']];
+        $test_url = sprintf("%s://%s:%d%s", strtolower($config['test_protocol']), $config['test_ip'], $config['test_port'], $uri);
+
+        for($i = 0; $i < $test_count; $i ++) {
+            $test_task   = new Task($method, $test_url, $params, $test_header);
+            $test_async->attach($test_task, "test$i");
+        }
+        $test_ret = $test_async->execute(true);
+        $test_total_consume = 0;
+        $test_response = [];
+        for($i = 0; $i < $test_count; $i ++) {
+            $test_total_consume += $test_ret["test$i"]['info']['total_time'];
+            if(empty($test_ret["test$i"]['error'])) {
+                $test_response = $test_ret["test$i"]['content'];
+            }
+        }
+        $test_avg_consume = $test_total_consume/$test_count;
+
+        $data = [
+            'test_ret'             => json_decode($test_response, true),
+            'test_total_consume'   => $test_total_consume,
+            'test_avg_consume'     => $test_avg_consume,
+            'master_ret'           => json_decode($master_response, true),
+            'master_total_consume' => $master_total_consume,
+            'master_avg_consume'   => $master_avg_consume,
         ];
 
         return $this->successResponse($data);
-    }
-
-    private function _getNowMillisecond()
-    {
-        list($t1, $t2) = explode(' ', microtime());
-        return (float)sprintf('%.0f',(floatval($t1)+floatval($t2))*1000);
     }
 }
 ?>

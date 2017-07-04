@@ -285,14 +285,15 @@ $("#requestBtn").click(function(){
         },
         function(data){
             if(data.errno != 0) {
-                alert('请求错误，请检查配置');
+                //alert('请求错误，请检查配置');
             }else {
                 var master_ret = data.data.master_ret;
                 var test_ret = data.data.test_ret;
-                $("#master_consume").html("耗时:" + data.data.master_consume + " ms");
+                $("#master_consume").html("总耗时:" + data.data.master_total_consume + " s，平均耗时:" + data.data.master_avg_consume + " s");
+                $("#test_consume").html("总耗时:" + data.data.test_total_consume + " s，平均耗时:" + data.data.test_avg_consume + " s");
                 $("#master-json").jsonViewer(master_ret);
                 $("#test-json").jsonViewer(test_ret);
-                $("#test_consume").html("耗时:" + data.data.test_consume + " ms");
+                
                 highLightDiff("master-json", "test-json");
             }
         });
