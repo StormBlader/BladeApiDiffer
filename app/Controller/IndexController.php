@@ -110,43 +110,43 @@ class IndexController extends BaseController
         ];
         **/
 
+        $async = new Async();
+
         $master_count = $this->getRequest('master_count', 1);
-        $master_async = new Async();
         $master_header = empty($config['master_host']) ? [] : ['Host: '. $config['master_host']];
         $master_url = sprintf("%s://%s:%d%s", strtolower($config['master_protocol']), $config['master_ip'], $config['master_port'], $uri);
+        $test_count = $this->getRequest('test_count', 1);
+        $test_header = empty($config['test_host']) ? [] : ['Host: '. $config['test_host']];
+        $test_url = sprintf("%s://%s:%d%s", strtolower($config['test_protocol']), $config['test_ip'], $config['test_port'], $uri);
 
         for($i = 0 ;$i < $master_count; $i ++) {
             $master_task = new Task($method, $master_url, $params, $master_header);
-            $master_async->attach($master_task, "master$i");
+            $async->attach($master_task, "master$i");
         }
-        $master_ret = $master_async->execute(true);
+
+        for($i = 0; $i < $test_count; $i ++) {
+            $test_task   = new Task($method, $test_url, $params, $test_header);
+            $async->attach($test_task, "test$i");
+        }
+
+        $async_ret = $async->execute(true);
 
         $master_total_consume = 0;
         $master_response = [];
         for($i = 0; $i < $master_count; $i ++) {
-            $master_total_consume += $master_ret["master$i"]['info']['total_time'];
-            if(empty($master_ret["master$i"]['error'])) {
-                $master_response = $master_ret["master$i"]['content'];
+            $master_total_consume += $async_ret["master$i"]['info']['total_time'];
+            if(empty($async_ret["master$i"]['error'])) {
+                $master_response = $async_ret["master$i"]['content'];
             }
         }
         $master_avg_consume = $master_total_consume/$master_count;
 
-        $test_count = $this->getRequest('test_count', 1);
-        $test_async = new Async();
-        $test_header = empty($config['test_host']) ? [] : ['Host: '. $config['test_host']];
-        $test_url = sprintf("%s://%s:%d%s", strtolower($config['test_protocol']), $config['test_ip'], $config['test_port'], $uri);
-
-        for($i = 0; $i < $test_count; $i ++) {
-            $test_task   = new Task($method, $test_url, $params, $test_header);
-            $test_async->attach($test_task, "test$i");
-        }
-        $test_ret = $test_async->execute(true);
         $test_total_consume = 0;
         $test_response = [];
         for($i = 0; $i < $test_count; $i ++) {
-            $test_total_consume += $test_ret["test$i"]['info']['total_time'];
-            if(empty($test_ret["test$i"]['error'])) {
-                $test_response = $test_ret["test$i"]['content'];
+            $test_total_consume += $async_ret["test$i"]['info']['total_time'];
+            if(empty($async_ret["test$i"]['error'])) {
+                $test_response = $async_ret["test$i"]['content'];
             }
         }
         $test_avg_consume = $test_total_consume/$test_count;
